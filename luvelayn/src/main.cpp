@@ -27,101 +27,104 @@ void newton_fractal(ImDrawList* drawlist, int width, int height, int max_iter) {
     const double y_min = -2.0;
     const double y_max = 2.0;
 
-    for (int i = 0; i < width; ++i) {
-        for (int j = 0; j < height; ++j) {
+    // Reduce the number of vertices by skipping some points
+    const int step = 6;
+
+    for (int i = 0; i < width; i += step) {
+        for (int j = 0; j < height; j += step) {
             double x = x_min + (x_max - x_min) * i / (width - 1);
             double y = y_min + (y_max - y_min) * j / (height - 1);
 
             std::complex<double> z(x, y);
 
             int iter = 0;
-            while (iter < max_iter && std::abs(z*z*z - 1.0) > epsilon) {
+            while (iter < max_iter && std::abs(z * z * z - 1.0) > epsilon) {
                 z = newton_iteration(z);
                 ++iter;
             }
 
             ImVec2 point(i, height - j);
             if (iter == max_iter) {
-                drawlist->AddRectFilled(point, ImVec2(i + 1, height - j + 1), IM_COL32(0, 0, 0, 255));
+                drawlist->AddRectFilled(point, ImVec2(i + step, height - j + step), IM_COL32(0, 0, 0, 255));
             } else {
                 float intensity = static_cast<float>(iter) / static_cast<float>(max_iter);
                 ImVec4 color(intensity, 0.5f, 1.0f - intensity, 1.0f);
-                drawlist->AddRectFilled(point, ImVec2(i + 1, height - j + 1), ImGui::ColorConvertFloat4ToU32(color));
+                drawlist->AddRectFilled(point, ImVec2(i + step, height - j + step), ImGui::ColorConvertFloat4ToU32(color));
             }
         }
     }
 }
 
+
 int main(int, char **) {
-  // Setup SDL
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) !=
-      0) {
-    printf("Error: %s\n", SDL_GetError());
-    return -1;
-  }
+    // Setup SDL
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) !=
+        0) {
+        printf("Error: %s\n", SDL_GetError());
+        return -1;
+    }
 
-  // Decide GL+GLSL versions
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-  // GL ES 2.0 + GLSL 100
-  const char *glsl_version = "#version 100";
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#elif defined(__APPLE__)
-  // GL 3.2 Core + GLSL 150
-  const char *glsl_version = "#version 150";
-  SDL_GL_SetAttribute(
-      SDL_GL_CONTEXT_FLAGS,
-      SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-#else
-  // GL 3.0 + GLSL 130
-  const char *glsl_version = "#version 130";
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#endif
+    // Decide GL+GLSL versions
+    #if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char *glsl_version = "#version 100";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    #elif defined(__APPLE__)
+    // GL 3.2 Core + GLSL 150
+    const char *glsl_version = "#version 150";
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_FLAGS,
+        SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    #else
+    // GL 3.0 + GLSL 130
+    const char *glsl_version = "#version 130";
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    #endif
 
-#ifdef SDL_HINT_IME_SHOW_UI
-  SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-#endif
+    #ifdef SDL_HINT_IME_SHOW_UI
+    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+    #endif
 
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-  SDL_WindowFlags window_flags =
-      (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
-                        SDL_WINDOW_ALLOW_HIGHDPI);
-  SDL_Window *window = SDL_CreateWindow(
-      "Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED,
-      SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
-  SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-  SDL_GL_MakeCurrent(window, gl_context);
-  SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_WindowFlags window_flags =
+        (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
+                            SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window *window = SDL_CreateWindow(
+        "Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED, 800, 600, window_flags);
+    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_SetSwapInterval(1);
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableKeyboard;
-  io.ConfigFlags |=
-      ImGuiConfigFlags_NavEnableGamepad;
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableGamepad;
 
-  ImGui::StyleColorsDark();
+    ImGui::StyleColorsDark();
 
-  ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-  ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-  bool show_another_window = false;
-  ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-  bool done = false;
+    bool done = false;
     static float angle = 0;
     const int length = 100;
     while (!done) {
@@ -155,7 +158,7 @@ int main(int, char **) {
 
             const ImVec2 center{size.x / 2, size.y / 2};
 
-            int max_iter = 50;
+            int max_iter = 42;
             newton_fractal(ImGui::GetWindowDrawList(), size.x, size.y, max_iter);
 
             counter++;
