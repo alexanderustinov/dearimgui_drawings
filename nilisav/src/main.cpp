@@ -129,8 +129,13 @@ int main(int, char **) {
       auto size = viewport->WorkSize;
       ImGui::SetNextWindowPos(viewport->WorkPos);
       ImGui::SetNextWindowSize(size);
-    
-    ImGui::Begin("Mandelbrot set");
+      static float f = 0.0f;
+      char str[10];
+      float val = io.Framerate;
+      sprintf(str, "%f", val);
+      
+      ImGui::Begin(str);
+
     	  int window_width = 1280;
     	  int window_height = 720;
           for(int x = 0; x < window_width; ++x) {
@@ -140,14 +145,15 @@ int main(int, char **) {
 
           int value = mandelbrot(real, imag, 128);
           float color = 1.0 - (float)value / 128.0;
-
+	
           ImVec4 pixel_color = ImVec4(color, color, color, 1.0f);
           ImGui::GetWindowDrawList()->AddRectFilled(
             ImVec2(x, y), ImVec2(x+1, y+1), ImColor(pixel_color)
           );
+          
         }
       }
-      
+	
     ImGui::End();
     }
 
