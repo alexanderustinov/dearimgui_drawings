@@ -25,6 +25,11 @@
 [submodule "Golovkov/external/imgui"]
 	path = Golovkov/external/imgui
 	url = https://github.com/ocornut/imgui.git
+  
 [submodule "lipatova/external/imgui"]
 	path = lipatova/external/imgui
 	url = https://github.com/ocornut/imgui.git
+  
+[submodule "luvelayn/external/imgui"]
+	path = luvelayn/external/imgui
+  url = https://github.com/ocornut/imgui.git
