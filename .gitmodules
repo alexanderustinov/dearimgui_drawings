@@ -33,3 +33,7 @@
 [submodule "luvelayn/external/imgui"]
 	path = luvelayn/external/imgui
   url = https://github.com/ocornut/imgui.git
+  
+[submodule "nilisav/external/imgui"]
+	path = nilisav/external/imgui
+	url = git@github.com:ocornut/imgui.git
